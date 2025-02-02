@@ -1,47 +1,46 @@
-name: Blog Deployment with SEO Optimizations
+name: Deploy blog to GitHub Pages
 
 on:
   push:
     branches:
-      - main  # Ejecutar en cada push a la rama principal
-  pull_request:
-    branches:
-      - main  # Ejecutar en cada PR hacia la rama principal
+      - main
 
 jobs:
-  seo_optimization:
-    runs-on: ubuntu-latest  # Usar el entorno Ubuntu
+  build:
+    runs-on: ubuntu-latest
 
     steps:
-    # Paso 1: Checkout del código
-    - name: Checkout del código
+    # 1. Checkout repository
+    - name: Checkout code
       uses: actions/checkout@v2
 
-    # Paso 2: Instalación de dependencias (si decides usar alguna herramienta)
-    - name: Instalar dependencias
+    # 2. Set up Node.js for tools (no dependencias)
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '14'
+
+    # 3. Minificar HTML (opcional, si tienes HTML generado dinámicamente)
+    - name: Minify HTML
       run: |
-        npm install -g html-minifier-terser  # Minificar HTML (si decides usar JS o CSS que generen HTML dinámico)
+        find . -name "*.html" -exec html-minifier --collapse-whitespace --remove-comments --remove-attribute-quotes --minify-js --minify-css {} \;
 
-    # Paso 3: Minificación de archivos HTML (opcional, si estás usando JS dinámico)
-    - name: Minificar HTML
+    # 4. Optimización de imágenes con una acción alternativa (optipng y gifsicle)
+    - name: Optimize images
       run: |
-        find . -name '*.html' -exec html-minifier-terser --collapse-whitespace --remove-comments --remove-empty-elements --minify-js true --minify-css true -o {} {} \;
+        sudo apt-get install optipng gifsicle
+        find . -iname '*.png' -exec optipng -o7 {} \;
+        find . -iname '*.gif' -exec gifsicle -O3 --batch {} \;
 
-    # Paso 4: Optimización de imágenes
-    - name: Optimizar imágenes
-      uses: wzieba/ImageOptim-action@v1
-
-    # Paso 5: Generar y guardar el Sitemap (si decides agregar esta funcionalidad)
-    - name: Generar Sitemap
+    # 5. Generar el sitemap (opcional, si tienes múltiples páginas)
+    - name: Generate sitemap
       run: |
-        npm install -g sitemap-generator-cli  # Instalar herramienta para generar sitemap
-        sitemap-generator https://tu-blog.com -o ./sitemap.xml  # Genera el sitemap
+        npm install -g sitemap-generator-cli
+        sitemap-generator https://your-website-url.com -o sitemap.xml
 
-    # Paso 6: Desplegar a GitHub Pages
-    - name: Desplegar a GitHub Pages
+    # 6. Deploy to GitHub Pages
+    - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v3
       with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}  # Token predeterminado para autenticar
-        publish_dir: ./  # Publica todo el directorio raíz
-        user_name: "tu-nombre"  # Tu nombre o el de tu empresa
-        user_email: "tu-email@tudominio.com"  # Tu correo para configuraciones de Git
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./public
