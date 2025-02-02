@@ -1,0 +1,25 @@
+name: Mi Workflow
+
+on:
+  push:
+    branches:
+      - main  # Esto significa que se ejecutará cuando haya un push a la rama principal
+
+jobs:
+  build:
+    runs-on: ubuntu-latest  # Esto define que el workflow se ejecutará en una máquina con Ubuntu
+
+    steps:
+    - name: Checkout del código
+      uses: actions/checkout@v2  # Acción para hacer checkout de tu código
+
+    - name: Configurar Node.js
+      uses: actions/setup-node@v2  # Configura Node.js si tu proyecto lo requiere
+      with:
+        node-version: '14'  # Establece la versión de Node.js que se usará
+
+    - name: Instalar dependencias
+      run: npm install  # Instala las dependencias de tu proyecto
+
+    - name: Ejecutar pruebas
+      run: npm test  # Ejecuta las pruebas de tu proyecto (si tienes pruebas configuradas)
