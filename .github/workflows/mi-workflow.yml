@@ -1,25 +1,47 @@
-name: Mi Workflow
+name: Blog Deployment with SEO Optimizations
 
 on:
   push:
     branches:
-      - main  # Esto significa que se ejecutará cuando haya un push a la rama principal
+      - main  # Ejecutar en cada push a la rama principal
+  pull_request:
+    branches:
+      - main  # Ejecutar en cada PR hacia la rama principal
 
 jobs:
-  build:
-    runs-on: ubuntu-latest  # Esto define que el workflow se ejecutará en una máquina con Ubuntu
+  seo_optimization:
+    runs-on: ubuntu-latest  # Usar el entorno Ubuntu
 
     steps:
+    # Paso 1: Checkout del código
     - name: Checkout del código
-      uses: actions/checkout@v2  # Acción para hacer checkout de tu código
+      uses: actions/checkout@v2
 
-    - name: Configurar Node.js
-      uses: actions/setup-node@v2  # Configura Node.js si tu proyecto lo requiere
-      with:
-        node-version: '14'  # Establece la versión de Node.js que se usará
-
+    # Paso 2: Instalación de dependencias (si decides usar alguna herramienta)
     - name: Instalar dependencias
-      run: npm install  # Instala las dependencias de tu proyecto
+      run: |
+        npm install -g html-minifier-terser  # Minificar HTML (si decides usar JS o CSS que generen HTML dinámico)
 
-    - name: Ejecutar pruebas
-      run: npm test  # Ejecuta las pruebas de tu proyecto (si tienes pruebas configuradas)
+    # Paso 3: Minificación de archivos HTML (opcional, si estás usando JS dinámico)
+    - name: Minificar HTML
+      run: |
+        find . -name '*.html' -exec html-minifier-terser --collapse-whitespace --remove-comments --remove-empty-elements --minify-js true --minify-css true -o {} {} \;
+
+    # Paso 4: Optimización de imágenes
+    - name: Optimizar imágenes
+      uses: wzieba/ImageOptim-action@v1
+
+    # Paso 5: Generar y guardar el Sitemap (si decides agregar esta funcionalidad)
+    - name: Generar Sitemap
+      run: |
+        npm install -g sitemap-generator-cli  # Instalar herramienta para generar sitemap
+        sitemap-generator https://tu-blog.com -o ./sitemap.xml  # Genera el sitemap
+
+    # Paso 6: Desplegar a GitHub Pages
+    - name: Desplegar a GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}  # Token predeterminado para autenticar
+        publish_dir: ./  # Publica todo el directorio raíz
+        user_name: "tu-nombre"  # Tu nombre o el de tu empresa
+        user_email: "tu-email@tudominio.com"  # Tu correo para configuraciones de Git
