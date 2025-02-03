@@ -1,4 +1,4 @@
-name: Deploy blog to GitHub Pages
+name: Deploy Blog to GitHub Pages
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -14,33 +14,24 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
-    # 2. Set up Node.js for tools (no dependencias)
-    - name: Set up Node.js
-      uses: actions/setup-node@v2
-      with:
-        node-version: '14'
-
-    # 3. Minificar HTML (opcional, si tienes HTML generado dinámicamente)
-    - name: Minify HTML
+    # 2. Minificar HTML, CSS y JavaScript (opcional)
+    - name: Minify HTML, CSS, and JavaScript
       run: |
-        find . -name "*.html" -exec html-minifier --collapse-whitespace --remove-comments --remove-attribute-quotes --minify-js --minify-css {} \;
+        sudo apt-get install -y html-minifier uglifycss uglify-js
+        find . -name "*.html" -exec html-minifier --collapse-whitespace --remove-comments --minify-js --minify-css {} \;
+        find . -name "*.css" -exec uglifycss {} --output {} \;
+        find . -name "*.js" -exec uglifyjs {} -o {} \;
 
-    # 4. Optimización de imágenes con una acción alternativa (optipng y gifsicle)
+    # 3. Optimizar imágenes (PNG y GIF)
     - name: Optimize images
       run: |
         sudo apt-get install optipng gifsicle
         find . -iname '*.png' -exec optipng -o7 {} \;
         find . -iname '*.gif' -exec gifsicle -O3 --batch {} \;
 
-    # 5. Generar el sitemap (opcional, si tienes múltiples páginas)
-    - name: Generate sitemap
-      run: |
-        npm install -g sitemap-generator-cli
-        sitemap-generator https://your-website-url.com -o sitemap.xml
-
-    # 6. Deploy to GitHub Pages
+    # 4. Deploy to GitHub Pages
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v3
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./public
+        publish_dir: .  # Aquí publica directamente desde el directorio raíz
