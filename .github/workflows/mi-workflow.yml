@@ -1,24 +1,37 @@
-name: Deploy Blog
+name: Deploy to GitHub Pages
 
 on:
   push:
     branches:
-      - main
+      - main  # Cambia esto a la rama que desees
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Deploy to GitHub Pages
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build project
+        run: npm run build  # Cambia esto al comando de construcción de tu proyecto
+
+      - name: Configure Git
         run: |
           git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git remote set-url origin https://x-access-token:${{ secrets.ACTIONS_DEPLOY_TOKEN }}@github.com/olmedo91/proyecto-blog.git
-          git switch -C gh-pages
-          git add .
-          git commit -m "Deploy blog"
-          git push --force origin gh-pages
+          git config user.email "github-actions@users.noreply.github.com"
+
+      - name: Deploy to GitHub Pages
+        run: |
+          git checkout -b gh-pages
+          git add -f dist  # Cambia "dist" al directorio de salida de tu construcción
+          git commit -m "Deploy to GitHub Pages"
+          git push origin gh-pages --force
