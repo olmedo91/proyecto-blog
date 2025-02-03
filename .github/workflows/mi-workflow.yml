@@ -13,9 +13,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Configurar el GitHub Pages y hacer push automáticamente
       - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: .  # Asegúrate de que tu contenido esté en el directorio raíz
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git remote set-url origin https://x-access-token:${{ secrets.ACTIONS_DEPLOY_TOKEN }}@github.com/olmedo91/proyecto-blog.git
+          git switch -C gh-pages
+          git add .
+          git commit -m "Deploy blog"
+          git push --force origin gh-pages
